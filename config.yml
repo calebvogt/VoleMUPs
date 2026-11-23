@@ -1,0 +1,62 @@
+# VoleMUPs configuration, read by the scripts in scripts/, R/ and web/.
+#
+# data_root: where downloads (raw/) and built tables (derived/) live. Sequences stay there, never in git or OneDrive.
+# On another machine, create config.local.yml next to this file (not tracked) with the keys to change, e.g.
+#   data_root: /Volumes/Vogt_28TB/Work/Projects/2026_ComparativeGenomics/VoleMUPs/data
+data_root: Z:\Work\Projects\2026_ComparativeGenomics\VoleMUPs\data
+
+# Genomes already downloaded by the sister projects are read in place, not downloaded again.
+shared_roots:
+  monogamy_genomes: Z:\Work\Projects\2026_ComparativeGenomics\2027_GenomicMonogamy\data\raw\opioid\genomes
+  callosum_vole_ucd: Z:\Work\Projects\2026_ComparativeGenomics\2027_GenomicCorpusCallosum\data\raw\vole_ucd
+
+# Requests to NCBI, UniProt and InterPro carry a generic User-Agent (no names, no email).
+user_agent: genome-inventory-script/1.0
+
+# CPU threads for miniprot, hmmsearch, blast, mafft and IQ-TREE (the PC is shared with other jobs).
+threads: 2
+
+# Species with an NCBI RefSeq gene annotation: proteins + GFF are downloaded (raw/refseq_<accession>/).
+# group: used for plot order and colour. role: focal = the question species; ref = reference; out = outgroup.
+refseq:
+  - {slug: mus_musculus,            name: Mus musculus,             common: house mouse,        group: Murinae,      accession: GCF_000001635.27}
+  - {slug: rattus_norvegicus,       name: Rattus norvegicus,        common: Norway rat,         group: Murinae,      accession: GCF_036323735.1}
+  - {slug: microtus_ochrogaster,    name: Microtus ochrogaster,     common: prairie vole,       group: Arvicolinae,  accession: GCF_000317375.1}
+  - {slug: microtus_pennsylvanicus, name: Microtus pennsylvanicus,  common: meadow vole,        group: Arvicolinae,  accession: GCF_037038515.1}
+  - {slug: microtus_oregoni,        name: Microtus oregoni,         common: creeping vole,      group: Arvicolinae,  accession: GCF_018167655.1}
+  - {slug: alexandromys_fortis,     name: Alexandromys fortis,      common: reed vole,          group: Arvicolinae,  accession: GCF_014885135.2}
+  - {slug: chionomys_nivalis,       name: Chionomys nivalis,        common: snow vole,          group: Arvicolinae,  accession: GCF_950005125.1}
+  - {slug: arvicola_amphibius,      name: Arvicola amphibius,       common: water vole,         group: Arvicolinae,  accession: GCF_903992535.2}
+  - {slug: myodes_glareolus,        name: Myodes glareolus,         common: bank vole,          group: Arvicolinae,  accession: GCF_982192425.1}
+  - {slug: mesocricetus_auratus,    name: Mesocricetus auratus,     common: golden hamster,     group: Cricetinae,   accession: GCF_017639785.1}
+  - {slug: cricetulus_griseus,      name: Cricetulus griseus,       common: Chinese hamster,    group: Cricetinae,   accession: GCF_003668045.3}
+  - {slug: phodopus_roborovskii,    name: Phodopus roborovskii,     common: desert hamster,     group: Cricetinae,   accession: GCF_943737965.1}
+  - {slug: peromyscus_maniculatus,  name: Peromyscus maniculatus,   common: deer mouse,         group: Neotominae,   accession: GCF_049852395.1}
+  - {slug: meriones_unguiculatus,   name: Meriones unguiculatus,    common: Mongolian gerbil,   group: Gerbillinae,  accession: GCF_030254825.1}
+  - {slug: castor_canadensis,       name: Castor canadensis,        common: North American beaver, group: other rodents, accession: GCF_047511655.1}
+  - {slug: equus_caballus,          name: Equus caballus,           common: horse,              group: non-rodents,  accession: GCF_041296265.1}
+  - {slug: homo_sapiens,            name: Homo sapiens,             common: human,              group: non-rodents,  accession: GCF_000001405.40}
+
+# Assemblies without a RefSeq annotation: the whole genome is searched with miniprot (scripts/step04_genomes.py).
+# shared: which entry of shared_roots holds the file (else raw/genome_<accession>/ is used).
+genomes:
+  - {slug: microtus_ochrogaster_ucd1, name: Microtus ochrogaster,   common: prairie vole (UC Davis hap1), group: Arvicolinae, accession: GCA_984569965.1, shared: callosum_vole_ucd}
+  - {slug: microtus_ochrogaster_ucd2, name: Microtus ochrogaster,   common: prairie vole (UC Davis hap2), group: Arvicolinae, accession: GCA_984569945.1, shared: callosum_vole_ucd, no_x: true}   # hap2 of a male: autosomes only
+  - {slug: microtus_agrestis,         name: Microtus agrestis,      common: field vole,         group: Arvicolinae, accession: GCA_987114375.1, shared: monogamy_genomes}
+  - {slug: microtus_arvalis,          name: Microtus arvalis,       common: common vole,        group: Arvicolinae, accession: GCA_044665705.1, shared: monogamy_genomes}
+  - {slug: microtus_montanus,         name: Microtus montanus,      common: montane vole,       group: Arvicolinae, accession: GCA_020392405.1, shared: monogamy_genomes}
+  - {slug: mus_spretus,               name: Mus spretus,            common: Algerian mouse (positive control), group: Murinae, accession: GCA_921997135.2, shared: monogamy_genomes}
+  - {slug: phodopus_sungorus,         name: Cricetiscus sungorus,   common: Djungarian hamster, group: Cricetinae,  accession: GCA_030556225.1, shared: monogamy_genomes}
+
+# Reference lipocalins from UniProt (queries and tree anchors). Mouse and rat MUPs come from their RefSeq proteomes.
+uniprot:
+  - {acc: Q9Z1I7, label: Mesocricetus_auratus|aphrodisin}
+  - {acc: D3VW62, label: Myodes_glareolus|Obp1_Stopkova2010}
+  - {acc: D3VW63, label: Myodes_glareolus|Obp2_Stopkova2010}
+  - {acc: D3VW64, label: Myodes_glareolus|Obp3_Stopkova2010}
+  - {acc: A0A5J6NLD0, label: Arvicola_amphibius|arvicolin}
+  - {acc: Q95182, label: Equus_caballus|Equ_c_1_MUP}
+  - {acc: Q5VFH6, label: Felis_catus|Fel_d_4_MUP}
+  - {acc: H2B3G5, label: Canis_familiaris|Can_f_6_MUP}
+
+pfam_hmm: PF00061

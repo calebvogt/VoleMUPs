@@ -1,0 +1,20 @@
+# Tools for the VoleMUPs pipeline (scripts/step02-07) on a Mac or Linux machine. On the Windows PC the same tools live in
+# the WSL micromamba envs "genomics" and "vmsearch" (see README.md).
+name: vole_mup
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.12
+  - biopython
+  - pyyaml
+  - requests
+  - pandas
+  - matplotlib
+  - blast
+  - hmmer
+  - seqkit
+  - miniprot
+  - mafft
+  - trimal
+  - iqtree>=3

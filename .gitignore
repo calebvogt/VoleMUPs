@@ -1,0 +1,11 @@
+# data never go in git (data_root in config.yml)
+data/*
+!data/.gitkeep
+
+# machine-specific overrides of config.yml
+config.local.yml
+
+__pycache__/
+*.pyc
+.DS_Store
+*.log
