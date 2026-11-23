@@ -66,14 +66,19 @@ def refseq_dir(cfg: dict, acc: str) -> Path:
 
 
 def genome_fasta(cfg: dict, g: dict) -> Path:
-    """Path of the genome FASTA (gz) of an entry of config 'genomes'."""
-    base = Path(cfg["shared_roots"][g["shared"]]) if g.get("shared") else paths(cfg)["raw"] / f"genome_{g['accession']}"
-    if g.get("shared") == "monogamy_genomes":
-        base = base / g["accession"]
-    hits = sorted(base.glob(f"{g['accession']}_*_genomic.fna.gz"))
-    if not hits:
-        raise FileNotFoundError(f"no genome FASTA for {g['accession']} in {base}")
-    return hits[0]
+    """Path of the genome FASTA (gz) of an entry of config 'genomes': from its shared_roots folder if that exists on
+    this machine, else from <data_root>/raw/genome_<accession>/ (where step01_download.py puts it)."""
+    bases = []
+    if g.get("shared") and g["shared"] in cfg.get("shared_roots", {}):
+        b = Path(cfg["shared_roots"][g["shared"]])
+        bases.append(b / g["accession"] if g["shared"] == "monogamy_genomes" else b)
+    bases.append(paths(cfg)["raw"] / f"genome_{g['accession']}")
+    for base in bases:
+        hits = sorted(base.glob(f"{g['accession']}_*_genomic.fna.gz"))
+        if hits:
+            return hits[0]
+    raise FileNotFoundError(f"no genome FASTA for {g['accession']} in {', '.join(map(str, bases))}; "
+                            "run scripts/step01_download.py to fetch it")
 
 
 def refseq_files(cfg: dict, acc: str) -> dict:

@@ -31,8 +31,8 @@ vole assembly; 9-25 intact in the well-assembled annotated voles; mouse 5).
 | web | `python web/build_web_data.py`, then `python web/make_tile.py` | JSON and tile for the project page (written into a `calebvogt.github.io` checkout next to this one) |
 
 `config.yml` sets the data folder (`data_root`), the species and the thread budget. Put machine-specific changes in an
-untracked `config.local.yml`. The seven assemblies without an annotation are read from `shared_roots`, or from
-`<data_root>/raw/genome_<accession>/` (download the `*_genomic.fna.gz` from NCBI there).
+untracked `config.local.yml`. Step 01 also fetches the seven assemblies without an annotation (about 6 GB) into
+`<data_root>/raw/genome_<accession>/`, unless they are already in a `shared_roots` folder (`--skip-genomes` to skip).
 
 Tools: `environment.yml` (conda/mamba: Python 3.12, Biopython, HMMER, seqkit, miniprot, MAFFT, trimAl, IQ-TREE 3,
 BLAST+). Steps 02-07 need Linux or macOS; on Windows run them in WSL:
@@ -60,3 +60,7 @@ bash scripts/run_all.sh step05 step07  # some steps
 - Stopková R et al. (2010) Novel OBP genes similar to hamster aphrodisin in the bank vole, *Myodes glareolus*. BMC Genomics 11:45. https://doi.org/10.1186/1471-2164-11-45
 - Stopková R et al. (2021) Biological roles of lipocalins in chemical communication, reproduction, and regulation of microbiota. Front Physiol 12:740006. https://doi.org/10.3389/fphys.2021.740006
 - Li H (2023) Protein-to-genome alignment with miniprot. Bioinformatics 39:btad014. https://doi.org/10.1093/bioinformatics/btad014
+
+## License
+
+The code is MIT-licensed (`LICENSE`). The genomes and RNA-seq are public data from NCBI and ENA, under their own terms.

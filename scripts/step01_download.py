@@ -19,7 +19,7 @@ from pathlib import Path
 
 import requests
 
-from vm_common import load_config, md5, now, paths, refseq_dir
+from vm_common import genome_fasta, load_config, md5, now, paths, refseq_dir
 
 FTP = "https://ftp.ncbi.nlm.nih.gov/genomes/all"
 
@@ -104,6 +104,32 @@ def refseq(cfg, s, sp: dict, with_rna: bool) -> None:
     print(f"{sp['slug']}: {', '.join(got)}", flush=True)
 
 
+def genome(cfg, s, g: dict) -> None:
+    """Whole-genome FASTA of an assembly without a RefSeq annotation (config 'genomes'), unless it is already on this
+    machine (shared_roots or raw/genome_<accession>/)."""
+    try:
+        print(f"{g['slug']}: found {genome_fasta(cfg, g)}", flush=True)
+        return
+    except FileNotFoundError:
+        pass
+    acc = g["accession"]
+    out = paths(cfg)["raw"] / f"genome_{acc}"
+    out.mkdir(parents=True, exist_ok=True)
+    base = ftp_folder(s, acc)
+    stem = base.rstrip("/").rsplit("/", 1)[-1]
+    md5s = {}
+    for line in get(s, base + "md5checksums.txt").text.splitlines():
+        parts = line.split()
+        if len(parts) == 2:
+            md5s[parts[1].lstrip("./")] = parts[0]
+    name = stem + "_genomic.fna.gz"
+    fetch(s, base + name, out / name, md5s.get(name))
+    (out / "README.txt").write_text(
+        f"{acc}, {g['name']} ({g['common']}).\nDownloaded {now()} by scripts/step01_download.py from {base}{name},\n"
+        f"checked against NCBI's md5checksums.txt.\n", encoding="utf-8")
+    print(f"{g['slug']}: {name}", flush=True)
+
+
 def uniprot(cfg, s) -> None:
     out = paths(cfg)["raw"] / "uniprot_reference"
     out.mkdir(parents=True, exist_ok=True)
@@ -145,6 +171,8 @@ def main() -> None:
     ap.add_argument("--rna", default="", help="comma-separated slugs whose RefSeq transcripts to fetch too")
     ap.add_argument("--only", default="")
     ap.add_argument("--skip-refseq", action="store_true")
+    ap.add_argument("--skip-genomes", action="store_true",
+                    help="do not fetch the whole genomes of the assemblies without an annotation (about 6 GB)")
     a = ap.parse_args()
     cfg = load_config()
     s = session(cfg)
@@ -157,6 +185,11 @@ def main() -> None:
             if only and sp["slug"] not in only:
                 continue
             refseq(cfg, s, sp, sp["slug"] in rna)
+    if not a.skip_genomes:
+        for g in cfg.get("genomes", []):
+            if only and g["slug"] not in only:
+                continue
+            genome(cfg, s, g)
 
 
 if __name__ == "__main__":
