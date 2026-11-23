@@ -48,8 +48,11 @@ def load_config() -> dict:
     local = PROJ / "config.local.yml"
     if local.exists():
         cfg.update(_yaml_load(local))
-    cfg["data_root"] = native_path(cfg["data_root"])
-    cfg["shared_roots"] = {k: native_path(v) for k, v in cfg.get("shared_roots", {}).items()}
+    def resolve(p: str) -> str:
+        p = native_path(str(p))
+        return p if os.path.isabs(p) or re.match(r"^[A-Za-z]:[\/]", p) else str(PROJ / p)
+    cfg["data_root"] = resolve(cfg["data_root"])
+    cfg["shared_roots"] = {k: resolve(v) for k, v in (cfg.get("shared_roots") or {}).items()}
     return cfg
 
 

@@ -29,11 +29,10 @@ vole assembly; 9-25 intact in the well-assembled annotated voles; mouse 5).
 | 06b | `scripts/step06b_egapx.py` | sanity check against the Dennis lab EGAPx annotation of the 2026 prairie and meadow vole assemblies (Abuelanin et al. 2026; fetched from their GitHub, used for analysis only): gene-by-gene match to the DNA-search models, and prairie vole liver reads counted against their MUP and OBP transcripts |
 | 07 | `scripts/step07_collect.py` | summary tables: genes, species, regions, CDS spans, QC |
 | 08 | `scripts/step08_structures.py --alphafold --esmfold` | 3D models for the page: AlphaFold database where it has the protein, ESMFold (run locally; `pip install torch transformers`, ~8 GB of weights cached in `models/` next to `data_root`) for the prairie vole MUP; signal peptides removed |
-| report | `Rscript R/render_report.R 01_mup_search` | renders `reports/01_mup_search.Rmd` next to the data folder |
 | web | `python web/build_web_data.py`, then `python web/make_tile.py` | JSON and tile for the project page (written into a `calebvogt.github.io` checkout next to this one) |
 
-`config.yml` sets the data folder (`data_root`), the species and the thread budget. Put machine-specific changes in an
-untracked `config.local.yml`. Step 01 also fetches the seven assemblies without an annotation (about 6 GB) into
+`config.yml` sets the data folder (`data_root`, default `data/` in this repo), the species and the thread budget.
+Put machine-specific changes in an untracked `config.local.yml`. Step 01 also fetches the seven assemblies without an annotation (about 6 GB) into
 `<data_root>/raw/genome_<accession>/`, unless they are already in a `shared_roots` folder (`--skip-genomes` to skip).
 
 Tools: `environment.yml` (conda/mamba: Python 3.12, Biopython, HMMER, seqkit, miniprot, MAFFT, trimAl, IQ-TREE 3,

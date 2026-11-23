@@ -1,14 +1,13 @@
 # VoleMUPs configuration, read by the scripts in scripts/, R/ and web/.
 #
-# data_root: where downloads (raw/) and built tables (derived/) live. Sequences stay there, never in git or OneDrive.
-# On another machine, create config.local.yml next to this file (not tracked) with the keys to change, e.g.
-#   data_root: /Volumes/Vogt_28TB/Work/Projects/2026_VoleMUPs/data
-data_root: Z:\Work\Projects\2026_VoleMUPs\data
+# data_root: where downloads (raw/) and built tables (derived/) live; relative paths are relative to this repo.
+# Data never go in git. Put machine-specific settings (another data folder, shared_roots) in config.local.yml next to
+# this file (not tracked); its keys replace these.
+data_root: data
 
-# Genomes already downloaded by the sister projects are read in place, not downloaded again.
-shared_roots:
-  monogamy_genomes: Z:\Work\Projects\2026_ComparativeGenomics\2027_GenomicMonogamy\data\raw\opioid\genomes
-  callosum_vole_ucd: Z:\Work\Projects\2026_ComparativeGenomics\2027_GenomicCorpusCallosum\data\raw\vole_ucd
+# Folders that already hold some of the genome FASTAs of 'genomes' below (read in place instead of downloading again),
+# e.g. {name: /path/to/folder}; a genome entry names its folder with 'shared: <name>'. Empty: step 01 downloads them.
+shared_roots: {}
 
 # Requests to NCBI, UniProt and InterPro carry a generic User-Agent (no names, no email).
 user_agent: genome-inventory-script/1.0

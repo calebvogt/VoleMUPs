@@ -1,6 +1,6 @@
 """Export the VoleMUPs results as compact JSON for the website page /projects/vole-mups/.
 
-Reads the derived tables on the Synology (Steps 02-07) and writes, into the site's projects/vole-mups/data/:
+Reads the derived tables in data_root (steps 02-08) and writes, into the site's projects/vole-mups/data/:
 - meta.json       species list with counts per clade and region summaries, headline numbers, build date
 - tree.json       the focused MUP/OBP gene tree (Newick, rooted) + one record per tip (species, gene, clade, status, where)
 - synteny.json    the three lipocalin neighbourhoods (MUP, OBP1, LCN2) per species: region, gaps, genes

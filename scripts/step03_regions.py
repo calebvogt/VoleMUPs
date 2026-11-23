@@ -3,7 +3,7 @@
 Why: a gene family can be missed by a gene annotation (pseudogenes, unusual genes) or lie in an assembly gap. Genes
 that sit next to each other in the mouse usually sit next to each other in other rodents too ('synteny'), so the
 mouse's neighbours of the Mup cluster mark where a vole's Mup genes should be. Looking at that stretch of DNA directly
-tells us whether the voles have MUP genes there, broken copies (pseudogenes), or a hole in the assembly.
+shows whether the voles have MUP genes there, broken copies (pseudogenes), or a hole in the assembly.
 
 Modes (run in order; --define and --fetch need internet and run anywhere, --search needs miniprot: WSL/Mac):
   --define  1. Query proteins for the DNA search (derived/queries/queries.faa): seven mouse MUPs chosen to span the
