@@ -2,8 +2,8 @@
 #
 # data_root: where downloads (raw/) and built tables (derived/) live. Sequences stay there, never in git or OneDrive.
 # On another machine, create config.local.yml next to this file (not tracked) with the keys to change, e.g.
-#   data_root: /Volumes/Vogt_28TB/Work/Projects/2026_ComparativeGenomics/VoleMUPs/data
-data_root: Z:\Work\Projects\2026_ComparativeGenomics\VoleMUPs\data
+#   data_root: /Volumes/Vogt_28TB/Work/Projects/2026_VoleMUPs/data
+data_root: Z:\Work\Projects\2026_VoleMUPs\data
 
 # Genomes already downloaded by the sister projects are read in place, not downloaded again.
 shared_roots:
@@ -60,3 +60,13 @@ uniprot:
   - {acc: H2B3G5, label: Canis_familiaris|Can_f_6_MUP}
 
 pfam_hmm: PF00061
+
+# 3D structures for the project page (scripts/step08_structures.py). AlphaFold DB where it has the protein; ESMFold
+# (run locally) where it does not. name = output file; label = what the page shows.
+structures:
+  alphafold:
+    - {acc: Q5FW60,     name: mouse_darcin,        label: Mouse darcin (MUP20)}
+    - {acc: D3VW63,     name: bankvole_obp2,       label: Bank vole OBP2}
+    - {acc: A0A5J6NLD0, name: watervole_arvicolin, label: Water vole arvicolin}
+  esmfold:
+    - {acc: A0ABM1AKN0, name: prairievole_mup,     label: Prairie vole MUP}

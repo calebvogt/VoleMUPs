@@ -27,6 +27,7 @@ vole assembly; 9-25 intact in the well-assembled annotated voles; mouse 5).
 | 05 | `scripts/step05_tree.py` | blastp labels; lipocalin tree (MAFFT, trimAl, IQ-TREE), rooted on ApoD; MUP / OBP / OBP2 clades; focused tree with ModelFinder and 1,000 ultrafast bootstraps |
 | 06 | `scripts/step06_expression.py --download`, then `--count` | first 120 MB of four liver RNA-seq runs (ENA); 25-mer read counts per lipocalin transcript |
 | 07 | `scripts/step07_collect.py` | summary tables: genes, species, regions, CDS spans, QC |
+| 08 | `scripts/step08_structures.py --alphafold --esmfold` | 3D models for the page: AlphaFold database where it has the protein, ESMFold (run locally; `pip install torch transformers`, ~8 GB of weights cached in `models/` next to `data_root`) for the prairie vole MUP; signal peptides removed |
 | report | `Rscript R/render_report.R 01_mup_search` | renders `reports/01_mup_search.Rmd` next to the data folder |
 | web | `python web/build_web_data.py`, then `python web/make_tile.py` | JSON and tile for the project page (written into a `calebvogt.github.io` checkout next to this one) |
 

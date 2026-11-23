@@ -167,6 +167,20 @@ def main() -> None:
     print(f"wrote {out}: tree {len(tips)} tips ({tree_kind}), synteny "
           + ", ".join(f"{k} {len(v)} rows" for k, v in syn.items()) + f", expression {len(samples)} samples")
 
+    # ---------------------------------------------------------------- 3D structures (step 08), next to data/
+    st = D / "structures"
+    if (st / "structures.tsv").exists():
+        dest = out.parent / "structures"
+        dest.mkdir(parents=True, exist_ok=True)
+        rows = rd(st / "structures.tsv")
+        for r in rows:
+            (dest / f"{r['name']}.pdb").write_bytes((st / f"{r['name']}.pdb").read_bytes())
+        write_json(dest / "structures.json", {"models": [{"name": r["name"], "label": r["label"], "acc": r["acc"],
+                                                          "method": r["method"], "first": num(r["first_res"]),
+                                                          "last": num(r["last_res"]), "plddt": num(r["mean_plddt"])}
+                                                         for r in rows]})
+        print(f"wrote {dest}: {len(rows)} structures")
+
 
 if __name__ == "__main__":
     main()
