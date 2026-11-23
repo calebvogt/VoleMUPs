@@ -143,8 +143,8 @@ def main() -> None:
                                                                  ("MUP" if e["gene_id"] == "MUPFAM" else
                                                                   (info.get("clade") or "lipo")))
         sym = e["symbol"]
-        if clade == "MUP" and sym.startswith("LOC"):
-            sym = "MUP " + sym                 # e.g. the single vole MUP gene, LOC101994101
+        if clade == "MUP" and not sym.lower().startswith("mup"):
+            sym = "MUP " + sym                 # e.g. the single vole MUP gene, LOC101994101 or EGAPx MOCH1_017914
         sm["genes"].append([sym, clade if clade in ("MUP", "OBP", "OBP2", "yard") else "lipo",
                             num(e["reads"]), num(e["rpm"]), (info.get("description") or e["description"])[:60]])
     for sm in samples.values():

@@ -12,9 +12,10 @@ that make up a sizeable share of the liver's mRNA, not enough for rare transcrip
 
 Reference per sample: the longest RefSeq transcript of every lipocalin gene of the species, plus albumin,
 apolipoprotein A-I and beta-actin as yardsticks. Where a better gene set exists, the MUP and OBP genes come instead from
-the DNA search (step 04: spliced miniprot CDS of every non-fragment locus): the prairie vole uses its 2026 long-read
-assembly (the 2012 annotation lists only 5 OBP genes); the montane vole, which has no annotation, uses its own MUP
-model, the prairie vole 2026 OBP models and the prairie vole yardsticks (cross-species, so its counts run low).
+elsewhere: the prairie vole uses the Dennis lab's EGAPx transcripts of its 2026 long-read assembly (full length, with
+UTRs; step 06b; the 2012 annotation lists only 5 OBP genes); the montane vole, which has no annotation, uses the
+DNA-search models (step 04: spliced miniprot CDS, no UTRs) of its own MUP and of the prairie vole 2026 OBPs, and the
+prairie vole yardsticks (cross-species and CDS-only, so its counts run low).
 
 Counting: every 25-letter word (k-mer) of each reference sequence is indexed, on both strands; k-mers shared by two
 genes are dropped, except within the MUP or the OBP family, where they count for the family ('shared sequence'). A read
@@ -40,7 +41,7 @@ from vm_common import (fasta_records, gff_attrs, load_config, now, paths, read_t
 # One liver per species (n = 1). Labels and sources are shown on the website; metadata from the ENA/BioSample records.
 RUNS = [
     {"run": "ERR17322872", "slug": "microtus_ochrogaster", "label": "prairie vole, adult male liver",
-     "models_from": [["microtus_ochrogaster_ucd1", "MUP"], ["microtus_ochrogaster_ucd1", "OBP"]],
+     "models_from": [["egapx_prairie", "MUP"], ["egapx_prairie", "OBP"]],
      "source": "UC Davis vole genome project (PRJEB108798; Abuelanin et al. 2026); tissue from Cold Spring Harbor Laboratory, 2017"},
     {"run": "ERR17322876", "slug": "microtus_pennsylvanicus", "label": "meadow vole, adult male liver",
      "source": "UC Davis vole genome project (PRJEB108798; Abuelanin et al. 2026); tissue from Cold Spring Harbor Laboratory, 2017"},
@@ -173,10 +174,19 @@ FAMILY_LABEL = {"MUPFAM": "Mup (shared sequence)|reads matching sequence shared 
                 "OBPFAM": "OBP (shared sequence)|reads matching sequence shared by several OBP genes"}
 
 
+_MODELS = {}
+
+
 def genome_models(cfg, P, genome_slug: str, family: str) -> dict:
     """gene key -> (label, spliced CDS): the non-fragment MUP or OBP loci found by the DNA search (step 04) in an
     assembly, each from the exons of its best miniprot model."""
     from vm_common import fasta_records, genome_fasta, parse_miniprot_gff, revcomp
+    if genome_slug == "egapx_prairie":           # the Dennis lab EGAPx transcripts (full length, with UTRs); step 06b
+        from step06b_egapx import egapx_models
+        etx, efam = egapx_models(cfg, P)
+        return {k: v for k, v in etx.items() if efam[k] == family}
+    if (genome_slug, family) in _MODELS:
+        return _MODELS[(genome_slug, family)]
     d = P["derived"] / "genomes" / genome_slug
     loci = [l for l in read_tsv(d / "loci.tsv") if l["family"] == family and l["status"] != "fragment"]
     models = {(m["contig"], m["start"], m["end"], m["strand"], m["query"]): m for m in parse_miniprot_gff(d / "miniprot.gff")}
@@ -200,6 +210,7 @@ def genome_models(cfg, P, genome_slug: str, family: str) -> dict:
             cds = revcomp(cds)
         out[f"{genome_slug}:locus{locus}"] = (f"{family} locus {locus}|{family} gene model, {genome_slug} DNA search "
                                               f"({l['status']})", cds)
+    _MODELS[(genome_slug, family)] = out
     return out
 
 
@@ -211,15 +222,61 @@ def reference(cfg, P, r: dict) -> tuple[dict, dict]:
     clade = {g["id"].split("|")[-1]: g["clade"] for g in genes if g["slug"] == src}
     replaced = {fam for _gs, fam in r.get("models_from", [])}
     tx = {gid: v for gid, v in tx.items() if clade.get(gid) not in replaced}
+    model_fam = {}
     for gs, family in r.get("models_from", []):
-        tx.update(genome_models(cfg, P, gs, family))
+        m = genome_models(cfg, P, gs, family)
+        tx.update(m)
+        model_fam.update({k: family for k in m})
     fam = {}
     for gid, (lab, _s) in tx.items():
-        c = clade.get(gid) or ("MUP" if lab.startswith("MUP locus") else "OBP" if lab.startswith("OBP locus") else "")
+        c = clade.get(gid) or model_fam.get(gid, "")
         if not c and re.search(r"major urinary|alpha-2u", lab, re.I):
             c = "MUP"
         fam[gid] = {"MUP": "MUPFAM", "OBP": "OBPFAM"}.get(c, gid)
     return tx, fam
+
+
+def count_reads(fq: Path, tx: dict, fam: dict) -> tuple[int, Counter]:
+    """Reads of one FASTQ counted per gene (and per family, for reads that fall only in sequence shared within the
+    MUP or OBP family); see the module docstring. Returns (reads read, counts)."""
+    from vm_common import revcomp
+    # k-mers shared by two genes are dropped, except within the MUP or OBP family: near-identical family members
+    # share much of their sequence, so those k-mers count for the family as a whole ('... (shared sequence)')
+    idx, dup = {}, set()
+    for gid, (_lab, seq) in tx.items():
+        for s in (seq, revcomp(seq)):
+            for i in range(len(s) - K + 1):
+                k = s[i:i + K]
+                old = idx.get(k)
+                if old is not None and old != gid:
+                    f_old = old if old in FAMILY_LABEL else fam.get(old)
+                    if fam[gid] in FAMILY_LABEL and f_old == fam[gid]:
+                        idx[k] = fam[gid]
+                        continue
+                    dup.add(k)
+                idx[k] = gid if old is None or old == gid else idx[k]
+    for k in dup:
+        idx.pop(k, None)
+    n, c = 0, Counter()
+    for rd in reads(fq):
+        n += 1
+        hits = Counter()
+        for i in range(0, len(rd) - K + 1, STRIDE):
+            g = idx.get(rd[i:i + K])
+            if g:
+                hits[g] += 1
+        if not hits or sum(hits.values()) < MIN_HITS:
+            continue
+        ids = set(hits)
+        if len(ids) == 1:
+            c[ids.pop()] += 1
+        else:
+            fams = {x if x in FAMILY_LABEL else fam.get(x, x) for x in ids}
+            if len(fams) == 1 and fams.pop() in FAMILY_LABEL:
+                f1 = next(x if x in FAMILY_LABEL else fam[x] for x in ids)
+                genes_hit = [x for x in ids if x not in FAMILY_LABEL]
+                c[genes_hit[0] if len(genes_hit) == 1 else f1] += 1
+    return n, c
 
 
 def count(cfg, P) -> None:
@@ -234,42 +291,7 @@ def count(cfg, P) -> None:
         if not fq.exists():
             continue
         tx, fam = reference(cfg, P, r)
-        # k-mers shared by two genes are dropped, except within the MUP or OBP family: near-identical family members
-        # share much of their sequence, so those k-mers count for the family as a whole ('... (shared sequence)')
-        idx, dup = {}, set()
-        for gid, (_lab, seq) in tx.items():
-            for s in (seq, revcomp(seq)):
-                for i in range(len(s) - K + 1):
-                    k = s[i:i + K]
-                    old = idx.get(k)
-                    if old is not None and old != gid:
-                        f_old = old if old in FAMILY_LABEL else fam.get(old)
-                        if fam[gid] in FAMILY_LABEL and f_old == fam[gid]:
-                            idx[k] = fam[gid]
-                            continue
-                        dup.add(k)
-                    idx[k] = gid if old is None or old == gid else idx[k]
-        for k in dup:
-            idx.pop(k, None)
-        n, c = 0, Counter()
-        for rd in reads(fq):
-            n += 1
-            hits = Counter()
-            for i in range(0, len(rd) - K + 1, STRIDE):
-                g = idx.get(rd[i:i + K])
-                if g:
-                    hits[g] += 1
-            if not hits or sum(hits.values()) < MIN_HITS:
-                continue
-            ids = set(hits)
-            if len(ids) == 1:
-                c[ids.pop()] += 1
-            else:
-                fams = {x if x in FAMILY_LABEL else fam.get(x, x) for x in ids}
-                if len(fams) == 1 and fams.pop() in FAMILY_LABEL:
-                    f1 = next(x if x in FAMILY_LABEL else fam[x] for x in ids)
-                    genes_hit = [x for x in ids if x not in FAMILY_LABEL]
-                    c[genes_hit[0] if len(genes_hit) == 1 else f1] += 1
+        n, c = count_reads(fq, tx, fam)
         for f1, lab in FAMILY_LABEL.items():
             if any(v == f1 for v in fam.values()):
                 tx = dict(tx, **{f1: (lab, "N" * 1000)})
