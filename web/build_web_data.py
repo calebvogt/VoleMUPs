@@ -139,8 +139,9 @@ def main() -> None:
                                            "source": meta.get("source", ""),
                                            "reads": num(e["reads_total"]), "genes": []})
         info = ann_ids.get((e["slug"], e["gene_id"]), {})
-        clade = "yard" if e["description"] == "yardstick" else ("MUP" if e["gene_id"] == "MUPFAM" else
-                                                                 (info.get("clade") or "lipo"))
+        clade = "yard" if e["description"] == "yardstick" else (e.get("family") or
+                                                                 ("MUP" if e["gene_id"] == "MUPFAM" else
+                                                                  (info.get("clade") or "lipo")))
         sym = e["symbol"]
         if clade == "MUP" and sym.startswith("LOC"):
             sym = "MUP " + sym                 # e.g. the single vole MUP gene, LOC101994101
