@@ -245,7 +245,7 @@ def now() -> str:
 # miniprot (Li 2023, Bioinformatics 39:btad014) output
 # ----------------------------------------------------------------------------------------------------------------------
 def parse_miniprot_gff(path: Path) -> list[dict]:
-    """One dict per miniprot alignment (adapted from 2027_GenomicCorpusCallosum/scripts/step0_genome_tools.py):
+    """One dict per miniprot alignment (adapted from 2026_DopamineCallosum/scripts/step0_genome_tools.py):
     query, contig, start/end (1-based, inclusive), strand, score (AS), frameshifts (fs), in-frame stops (st),
     identity, query range aligned, exons, and the translation of the genome along the model (--trans)."""
     models, cur = [], None
